@@ -12,11 +12,12 @@ from dhsession import DHSession
 
 class DHSlave:
 
-    def __init__(self, iface, count, interpacketdelay=0):
+    def __init__(self, iface, count, interpacketdelay=0, opt82=None):
         self.iface = iface
         self.count = count
         self.sessions = dict()
         self.ipd = interpacketdelay
+        self.opt82 = opt82
         self.listener = Thread(target=self.register_listener)
         self.listener.start()
 
@@ -33,7 +34,7 @@ class DHSlave:
         sock = conf.L2socket(iface=self.iface)
         # create all sessions
         for _ in range(self.count):
-            ses = DHSession(sock=sock)  # opt82="sw1 eth 0/0/1:.707990A978E5"
+            ses = DHSession(sock=sock, opt82=self.opt82) 
             self.sessions[ses.mac[:6]] = ses
         print(f"Created {len(self.sessions)} sessions")
         # handle retransmits
