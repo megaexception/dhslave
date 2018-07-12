@@ -46,6 +46,12 @@ class DHSlave:
                     if ses.state in ["discover", "init"]:
                         ses.discover()
                         sleep(self.ipd)
+                    if ses.state in ["request"]:
+                        ses.request()
+                        sleep(self.ipd)
+                    if ses.state in ["ack"]:
+                        ses.ping()
+                        sleep(self.ipd)
                 # wait 5 seconds between retransmits
                 sleep(5)
         except KeyboardInterrupt:

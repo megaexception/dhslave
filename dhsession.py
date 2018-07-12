@@ -5,7 +5,7 @@
 
 from random import randrange
 
-from scapy.all import Ether, IP, UDP, BOOTP, DHCP, RandMAC, sendp, mac2str, str2mac
+from scapy.all import Ether, IP, ICMP, UDP, BOOTP, DHCP, RandMAC, sendp, mac2str, str2mac
 
 from utils import gen_opt82
 
@@ -38,8 +38,8 @@ class DHSession:
 
     def get_offer(self, offer):
         self.addr = offer[BOOTP].yiaddr
-        dhcp_server = offer[BOOTP].siaddr
-        print(f"Session {str2mac(self.mac)} got offer for {self.addr} from {dhcp_server}")
+        self.dhcp_server = offer[BOOTP].siaddr
+        print(f"Session {str2mac(self.mac)} got offer for {self.addr} from {self.dhcp_server}")
         for i in offer[DHCP].options[2:]:
             if i == 'end':
                 break
@@ -69,4 +69,14 @@ class DHSession:
 
     def release(self):
         pass
+
+    def ping(self):
+        # print(f"Session {str2mac(self.mac)} running ping from {self.addr} to {self.dhcp_server}")
+        pkt = Ether(src=self.mac, dst="ff:ff:ff:ff:ff:ff")
+        pkt /= IP(src=self.addr, dst=self.dhcp_server)
+        pkt /= ICMP()
+        if self.sock:
+            self.sock.send(pkt)
+        else:
+            sendp(pkt, iface=self.iface)
 
