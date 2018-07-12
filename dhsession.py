@@ -53,7 +53,7 @@ class DHSession:
         pkt /= IP(src="0.0.0.0", dst="255.255.255.255")
         pkt /= UDP(sport=68, dport=67)
         pkt /= BOOTP(chaddr=self.mac)
-        pkt /= DHCP(options=[("message-type", "request"), ("requested_addr", self.addr), *self.options])
+        pkt /= DHCP(options=[("message-type", "request"), ("requested_addr", self.addr), *self.options, "end"])
         if self.sock:
             self.sock.send(pkt)
         else:
