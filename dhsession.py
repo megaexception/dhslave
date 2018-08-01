@@ -3,7 +3,7 @@
 """
 """
 
-from scapy.all import Ether, IP, ICMP, UDP, BOOTP, DHCP, sendp, mac2str, str2mac
+from scapy.all import Ether, ARP, IP, ICMP, UDP, BOOTP, DHCP, sendp, Raw, str2mac
 
 from utils import gen_opt82, gen_mac
 
@@ -61,6 +61,8 @@ class DHSession:
     def get_ack(self, ack):
         print(f"Session {str2mac(self.mac)} got ack for {self.addr}")
         self.state = "ack"
+        self.arp()
+        return self.addr
 
     def get_nack(self, nack):
         print(f"Session {str2mac(self.mac)} got nack for {self.addr}")
@@ -76,7 +78,7 @@ class DHSession:
         self.state = "done"
 
     def ping(self):
-        # print(f"Session {str2mac(self.mac)} running ping from {self.addr} to {self.dhcp_server}")
+        print(f"Session {str2mac(self.mac)} running ping from {self.addr} to {self.dhcp_server}")
         pkt = Ether(src=self.mac, dst="ff:ff:ff:ff:ff:ff")
         pkt /= IP(src=self.addr, dst=self.dhcp_server)
         pkt /= ICMP()
@@ -84,11 +86,19 @@ class DHSession:
 
     def arp(self):
         pkt = Ether(src=self.mac, dst="ff:ff:ff:ff:ff:ff")
-        pkt /= ARP(psrc=self.addr, hwsrc=self.mac, pdst="ff:ff:ff:ff:ff:ff")
+        pkt /= ARP(op=ARP.is_at, psrc=self.addr, hwsrc=self.mac, hwdst="ff:ff:ff:ff:ff:ff", pdst="255.255.255.255")
         self.sendp(pkt)
 
     def get_arp(self, arp_req):
-        pass
+        print(f"Session {str2mac(self.mac)} received arp")
+        pkt = Ether(src=self.mac, dst=arp_req[Ether].src)
+        pkt /= ARP(op=ARP.is_at, psrc=self.addr, hwsrc=self.mac, hwdst=arp_req[ARP].hwsrc, pdst=arp_req[ARP].psrc)
+        self.sendp(pkt)
 
     def get_ping(self, echo):
-        pass
+        print(f"Session {str2mac(self.mac)} received icmp echo request from {echo[IP].src}")
+        pkt = Ether(src=self.mac, dst=echo[Ether].src)
+        pkt /= IP(src=self.addr, dst=echo[IP].src)
+        pkt /= ICMP(type="echo-reply", id=echo[ICMP].id, seq=echo[ICMP].seq)
+        pkt /= echo[Raw]
+        self.sendp(pkt)

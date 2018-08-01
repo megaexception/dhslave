@@ -32,15 +32,16 @@ class DHSlave:
             if pkt[DHCP].options[0] == ('message-type', 6):
                 self.sessions[mac].get_nack(pkt)
             if pkt[DHCP].options[0] == ('message-type', 5):
-                self.sessions[mac].get_ack(pkt)
-        elif pkt.haslayer(ARP):
-            mac = pkt[Ether].dst
+                ip = self.sessions[mac].get_ack(pkt)
+                self.sessions[ip] = self.sessions[mac]
+        elif pkt.haslayer(ARP) and pkt[ARP].op == ARP.who_has:
+            mac = pkt[ARP].pdst
             if mac in self.sessions:
-                print(f"Received arp for {mac}")
-        elif pkt.haslayer(ICMP):
-            mac = pkt[Ether].dst
-            if mac in self.sessions:
-                print(f"Received icmp for {mac}")
+                self.sessions[mac].get_arp(pkt)
+        elif pkt.haslayer(ICMP) and pkt[ICMP].type == 8:
+            ip = pkt[IP].dst
+            if ip in self.sessions:
+                self.sessions[ip].get_ping(pkt)
 
     def start(self):
         sock = conf.L2socket(iface=self.iface)
@@ -62,7 +63,7 @@ class DHSlave:
                         ses.request()
                         sleep(self.ipd)
                     if ses.state in ["ack"]:
-                        ses.ping()
+                        # ses.ping()
                         sleep(self.ipd)
                 # wait 5 seconds between retransmits
                 sleep(5)
