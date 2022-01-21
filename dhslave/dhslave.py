@@ -8,7 +8,7 @@ from threading import Thread
 
 from scapy.all import ARP, Ether, IP, ICMP, UDP, BOOTP, DHCP, sniff, conf
 
-from dhsession import DHSession
+from .dhsession import DHSession
 
 
 class DHSlave:
@@ -34,7 +34,7 @@ class DHSlave:
             if pkt[DHCP].options[0] == ('message-type', 5):
                 ip = self.sessions[mac].get_ack(pkt)
                 self.sessions[ip] = self.sessions[mac]
-        elif pkt.haslayer(ARP) and pkt[ARP].op == ARP.who_has:
+        elif pkt.haslayer(ARP) and pkt[ARP].op == 'who-has':
             mac = pkt[ARP].pdst
             if mac in self.sessions:
                 self.sessions[mac].get_arp(pkt)

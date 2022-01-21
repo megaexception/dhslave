@@ -8,7 +8,11 @@ from random import randint
 
 def gen_opt82(opttype="Circuit-ID", value="opt82 text"):
     subtypes = {'Circuit-ID': 1}
-    return subtypes.get(opttype).to_bytes(1, "big") + len(value).to_bytes(1, "big") + value.encode("ascii")
+    return (
+        subtypes.get(opttype, 0).to_bytes(1, "big")
+        + len(value).to_bytes(1, "big")
+        + value.encode("ascii")
+    )
 
 
 def gen_mac() -> bytes:

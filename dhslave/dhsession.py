@@ -5,7 +5,7 @@
 
 from scapy.all import Ether, ARP, IP, ICMP, UDP, BOOTP, DHCP, sendp, Raw, str2mac
 
-from utils import gen_opt82, gen_mac
+from .utils import gen_opt82, gen_mac
 
 
 class DHSession:
@@ -86,7 +86,7 @@ class DHSession:
 
     def arp(self):
         pkt = Ether(src=self.mac, dst="ff:ff:ff:ff:ff:ff")
-        pkt /= ARP(op=ARP.is_at, psrc=self.addr, hwsrc=self.mac, hwdst="ff:ff:ff:ff:ff:ff", pdst="255.255.255.255")
+        pkt /= ARP(op='is-at', psrc=self.addr, hwsrc=self.mac, hwdst="ff:ff:ff:ff:ff:ff", pdst="255.255.255.255")
         self.sendp(pkt)
 
     def get_arp(self, arp_req):
